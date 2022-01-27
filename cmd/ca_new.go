@@ -15,17 +15,20 @@ import (
 )
 
 func newCACommand() *cobra.Command {
+	initialize := initialize("ca_config")
 	cmd := cobra.Command{
 		Use:   "new",
 		Short: "自己署名CA証明書作成(key, cert)",
 		Long:  `certファイルとkeyファイルのセットで自己署名CA証明書を作成します`,
-		PreRun: func(cmd *cobra.Command, args []string) {
-			initialize(cmd, "ca_config")
-		},
 		Run: func(cmd *cobra.Command, args []string) {
+			config, err := cmd.Flags().GetString("config")
+			if err != nil {
+				errorExit(err)
+			}
+			initialize(cmd, config)
 			var caArg caArgs
 			caArg.serialNumber = viper.GetInt("serialNumber")
-			caArg.keyLength = viper.GetInt("bits")
+			caArg.bits = viper.GetInt("bits")
 			caArg.days = viper.GetInt("days")
 			caArg.country = viper.GetStringSlice("country")
 			caArg.commonName = viper.GetString("commonName")
@@ -43,6 +46,7 @@ func newCACommand() *cobra.Command {
 		},
 	}
 	flags := cmd.Flags()
+	flags.String("config", "", "CA configuration")
 	flags.Int("serialNumber", 1, "serial number")
 	flags.Int("bits", 2048, "key length")
 	flags.StringSlice("country", []string{"JP"}, "country")
@@ -55,20 +59,8 @@ func newCACommand() *cobra.Command {
 	return &cmd
 }
 
-type caArgs struct {
-	serialNumber     int
-	keyLength        int
-	country          []string
-	organization     []string
-	organizationUnit []string
-	commonName       string
-	certFile         readWrite
-	keyFile          readWrite
-	days             int
-}
-
 func certificateRun(args caArgs) error {
-	privateCaKey, err := rsa.GenerateKey(rand.Reader, args.keyLength)
+	privateCaKey, err := rsa.GenerateKey(rand.Reader, args.bits)
 	if err != nil {
 		return err
 	}

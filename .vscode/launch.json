@@ -11,8 +11,10 @@
             "mode": "debug",
             "program": "${workspaceFolder}",
             "args": [
-                "ca",
-                "update"
+                "server",
+                "csr",
+                "--config",
+                "server_config.yaml"
             ],
         }
     ]

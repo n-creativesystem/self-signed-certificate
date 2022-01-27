@@ -1,0 +1,32 @@
+before:
+  hooks:
+    - go mod download
+builds:
+  - binary: ssc
+    main: .
+    ldflags:
+      - -s -w
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+archives:
+  - name_template: '{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}'
+    replacements:
+      darwin: darwin
+      windows: windows
+      linux: linux
+      amd64: x86_64
+    format_overrides:
+      - goos: windows
+        format: zip
+    files: ["LICENSE"]
+checksum:
+  name_template: "checksums.txt"
+  algorithm: sha256
+release:
+  prerelease: auto

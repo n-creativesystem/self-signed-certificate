@@ -13,15 +13,18 @@ import (
 )
 
 func updateCACommand() *cobra.Command {
+	initialize := initialize("ca_config")
 	cmd := cobra.Command{
 		Use:   "update",
 		Short: "自己署名CA証明書serial numberの更新",
 		Long:  `certファイルのserial numberをインクリメントしてファイルの更新を行います。`,
-		PreRun: func(cmd *cobra.Command, args []string) {
-			initialize(cmd, "ca_config")
-		},
 		Run: func(cmd *cobra.Command, args []string) {
 			var err error
+			config, err := cmd.Flags().GetString("config")
+			if err != nil {
+				errorExit(err)
+			}
+			initialize(cmd, config)
 			var caArg caUpdateArgs
 			certFilename := viper.GetString("cert")
 			keyFilename := viper.GetString("key")
@@ -40,6 +43,7 @@ func updateCACommand() *cobra.Command {
 		},
 	}
 	flags := cmd.Flags()
+	flags.String("config", "", "CA configuration")
 	flags.String("cert", "ca.crt", "ca cert file name")
 	flags.String("key", "ca.key", "ca private key file name")
 	return &cmd

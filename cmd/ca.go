@@ -14,3 +14,15 @@ func caCommand() *cobra.Command {
 	cmd.AddCommand(updateCACommand())
 	return &cmd
 }
+
+type caArgs struct {
+	serialNumber     int
+	bits             int
+	country          []string
+	organization     []string
+	organizationUnit []string
+	commonName       string
+	certFile         readWrite
+	keyFile          readWrite
+	days             int
+}

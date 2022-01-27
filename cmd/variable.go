@@ -73,30 +73,36 @@ var (
 	envPrefix  = "SELF_CERT"
 )
 
-func initialize(cmd *cobra.Command, configFile string) {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		_, _ = fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
-	viper.AddConfigPath(path.Join("/etc", "self_certificate"))
-	viper.AddConfigPath(".")
-	viper.AddConfigPath(path.Join(home, "self_certificate"))
-	viper.SetConfigName(configFile)
-
-	viper.SetEnvPrefix(envPrefix)
-	viper.AutomaticEnv()
-
-	if err := viper.ReadInConfig(); err != nil {
-		switch err.(type) {
-		case viper.ConfigFileNotFoundError:
-			// config file does not found in search path
-		default:
-			_, _ = fmt.Fprintln(os.Stderr, err)
-			os.Exit(1)
+func initialize(defaultConfName string) func(cmd *cobra.Command, configFile string) {
+	return func(cmd *cobra.Command, configFile string) {
+		if configFile != "" {
+			viper.SetConfigFile(configFile)
+		} else {
+			home, err := os.UserHomeDir()
+			if err != nil {
+				_, _ = fmt.Fprintln(os.Stderr, err)
+				os.Exit(1)
+			}
+			viper.AddConfigPath(path.Join("/etc", "self_certificate"))
+			viper.AddConfigPath(".")
+			viper.AddConfigPath(path.Join(home, "self_certificate"))
+			viper.SetConfigName(defaultConfName)
 		}
+
+		viper.SetEnvPrefix(envPrefix)
+		viper.AutomaticEnv()
+
+		if err := viper.ReadInConfig(); err != nil {
+			switch err.(type) {
+			case viper.ConfigFileNotFoundError:
+				// config file does not found in search path
+			default:
+				_, _ = fmt.Fprintln(os.Stderr, err)
+				os.Exit(1)
+			}
+		}
+		bindFlags(cmd, viper.GetViper())
 	}
-	bindFlags(cmd, viper.GetViper())
 }
 
 func bindFlags(cmd *cobra.Command, v *viper.Viper) {

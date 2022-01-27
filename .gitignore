@@ -15,6 +15,7 @@
 # vendor/
 *.crt
 *.key
+*.csr
 *.yaml
 /bin
 /dist
